@@ -58,9 +58,47 @@ int ImageStore::FetchFiles(const WCHAR* path)
 
 	std::sort(m_files.begin(), m_files.end(), [](const std::unique_ptr<WCHAR[]>& l, const std::unique_ptr<WCHAR[]>& r) {
 		return wcscmp(l.get(), r.get()) < 0;
-		});
+	});
 
 	return static_cast<int>(m_files.size());
+}
+
+int ImageStore::PointFile(const WCHAR* file)
+{
+	if (m_files.empty()) {
+		m_current_file = 0;
+		return 0;
+	}
+	auto cur = std::find_if(m_files.begin(), m_files.end(), [file](std::unique_ptr<WCHAR[]>& p) {
+		return wcscmp(p.get(), file) == 0;
+	});
+	m_file_index = (cur - m_files.begin()) % m_files.size();
+	return m_file_index;
+}
+
+PCWSTR ImageStore::GetNextFilename(int step) const
+{
+	size_t file_cnt = m_files.size();
+	switch (file_cnt) {
+	case 0:
+		return nullptr;
+	case 1:
+		return m_files[0].get();
+	default:
+		return m_files[(m_file_index + step) % file_cnt].get();
+	}
+}
+PCWSTR ImageStore::GetPrevFilename(int step) const
+{
+	size_t file_cnt = m_files.size();
+	switch (file_cnt) {
+	case 0:
+		return nullptr;
+	case 1:
+		return m_files[0].get();
+	default:
+		return m_files[(m_file_index - step) % file_cnt].get();
+	}
 }
 
 void ImageStore::CmdOpenFile(AsyncReturn* view, const WCHAR* filename)
@@ -69,38 +107,106 @@ void ImageStore::CmdOpenFile(AsyncReturn* view, const WCHAR* filename)
 	std::unique_ptr<WCHAR[]> path = std::make_unique<WCHAR[]>(strsize);
 	CopyMemory(path.get(), filename, strsize);
 	HRESULT hr = PathCchRemoveFileSpec(path.get(), strsize);
+	int filelist_size = 0;
 	if (hr == S_OK) {
-		FetchFiles(path.get());
+		filelist_size = FetchFiles(path.get());
+		PointFile(filename);
 	}
 
-	if (filename)
+	std::unique_ptr<FileBuffer> file = std::make_unique<FileBuffer>();
+	if (file->Initialize(filename) == S_OK)
 	{
-		HANDLE hfile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (hfile == INVALID_HANDLE_VALUE) {
-			view->sendAsyncReturn(-1, 0);
-		}
-		LARGE_INTEGER filesize;
-		if (!GetFileSizeEx(hfile, &filesize)) {
-			view->sendAsyncReturn(-1, 0);
-		}
+		m_current_file = std::move(file);
+		switch (filelist_size) {
+		case 0:
+		case 1:
+			m_next_file = m_current_file;
+			m_prev_file = m_current_file;
+			break;
+		case 2:
+			if (file->Initialize(GetNextFilename()) == S_OK) {
+				m_next_file = std::move(file);
+				m_prev_file = m_next_file;
+			}
+			break;
+		default:
+			if (file->Initialize(GetNextFilename()) == S_OK) {
+				m_next_file = std::move(file);
+			}
+			if (file->Initialize(GetPrevFilename()) == S_OK) {
+				m_prev_file = std::move(file);
+			}
 
-		Assert(filesize.HighPart == 0);
-		std::unique_ptr<BYTE[]> buf = std::make_unique<BYTE[]>(filesize.LowPart);
-		DWORD rsize;
-		if (!ReadFile(hfile, buf.get(), filesize.LowPart, &rsize, NULL)) {
-			view->sendAsyncReturn(-1, 0);
 		}
-		m_current_buf = std::move(buf);
-		CloseHandle(hfile);
+		view->sendAsyncReturn(S_OK, m_current_file);
+	}
+	else {
+		view->sendAsyncReturn(E_FAIL, m_null_file);
 	}
 }
 
 void ImageStore::CmdNextFile(AsyncReturn* view)
 {
-
+	size_t file_cnt = m_files.size();
+	switch (file_cnt) {
+	case 0:
+		view->sendAsyncReturn(E_FAIL, m_null_file);
+		break;
+	case 1:
+		view->sendAsyncReturn(E_FAIL, m_null_file);
+		break;
+	case 2:
+		m_prev_file = m_current_file;
+		m_current_file = m_next_file;
+		m_next_file = m_prev_file;
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	case 3:
+		m_current_file.swap(m_next_file);
+		m_next_file.swap(m_prev_file);
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	default:
+		std::unique_ptr<FileBuffer> next = std::make_unique<FileBuffer>();
+		m_prev_file = m_current_file;
+		m_current_file = m_next_file;
+		if (next->Initialize(GetNextFilename()) == S_OK) {
+			m_next_file = std::move(next);
+		}
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	}
 }
 
 void ImageStore::CmdPrevFile(AsyncReturn* view)
 {
-
+	size_t file_cnt = m_files.size();
+	switch (file_cnt) {
+	case 0:
+		view->sendAsyncReturn(E_FAIL, m_null_file);
+		break;
+	case 1:
+		view->sendAsyncReturn(E_FAIL, m_null_file);
+		break;
+	case 2:
+		m_prev_file = m_current_file;
+		m_current_file = m_next_file;
+		m_next_file = m_prev_file;
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	case 3:
+		m_current_file.swap(m_prev_file);
+		m_next_file.swap(m_prev_file);
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	default:
+		std::unique_ptr<FileBuffer> prev = std::make_unique<FileBuffer>();
+		m_next_file = m_current_file;
+		m_current_file = m_prev_file;
+		if (prev->Initialize(GetNextFilename()) == S_OK) {
+			m_prev_file = std::move(prev);
+		}
+		view->sendAsyncReturn(S_OK, m_current_file);
+		break;
+	}
 }

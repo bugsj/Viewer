@@ -19,6 +19,10 @@
 #include <memory.h>
 #include <tchar.h>
 
+#include <memory>
+#include <mutex>
+
+
 template <typename T>
 inline void SafeRelease(T*& p)
 {

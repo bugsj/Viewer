@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include <memory>
+#include "FileBuffer.h"
 
 class AsyncReturn;
 
@@ -12,22 +13,26 @@ public:
 
 	HRESULT Initialize();
 
-private:
-	PCWSTR ClassName() const { return L"ImageStore"; }
-
-	void CmdOpenFile(AsyncReturn*view, const WCHAR* file);
+	void CmdOpenFile(AsyncReturn* view, const WCHAR* file);
 	void CmdNextFile(AsyncReturn* view);
 	void CmdPrevFile(AsyncReturn* view);
 
+private:
+	PCWSTR ClassName() const { return L"ImageStore"; }
+
 	int FetchFiles(const WCHAR* path);
 	int AppendFiles(const WCHAR* path, const WCHAR* filetype);
+	int PointFile(const WCHAR* path);
+	PCWSTR GetNextFilename(int step = 1) const;
+	PCWSTR GetPrevFilename(int step = 1) const;
 
 private:
 	std::vector< std::unique_ptr<WCHAR[]> > m_files;
 	int m_file_index;
 
-	std::unique_ptr<BYTE[]> m_current_buf;
-	std::unique_ptr<BYTE[]> m_next_buf;
-	std::unique_ptr<BYTE[]> m_prev_buf;
+	std::shared_ptr<FileBuffer> m_current_file;
+	std::shared_ptr<FileBuffer> m_next_file;
+	std::shared_ptr<FileBuffer> m_prev_file;
+	std::shared_ptr<FileBuffer> m_null_file;
 };
 
