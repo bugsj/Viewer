@@ -11,6 +11,7 @@
 
 
 #include "../Viewer/FileBuffer.h"
+#include "../Viewer/ImageStore.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -29,7 +30,7 @@ namespace ViewerUnitTest
 			Assert::AreEqual(fb1.Initialize(L"d:\\SHARE\\pic\\024.jpg"), E_FAIL);
 
 			FileBuffer fb2;
-			Assert::AreEqual(fb2.Initialize(L"d:\\SHARE\\pic\\024.jpg"), S_OK);
+			Assert::AreEqual(fb2.Initialize(L"d:\\SHARE\\pic\\Thumbs.db"), S_OK);
 			Assert::AreEqual(fb2.Initialize(L"d:\\SHARE\\pic\\02.jpg"), E_FAIL);
 		}
 		TEST_METHOD(FileBufferGet)
@@ -43,14 +44,32 @@ namespace ViewerUnitTest
 			buf = fb1.getBuffer(nullptr);
 			Assert::AreEqual(reinterpret_cast<int>(buf), 0);
 			Assert::AreEqual(fb1.Initialize(L"d:\\SHARE\\pic\\02.jpg"), S_OK);
+			const int test_file_size = 339631;
 			buf = fb1.getBuffer(&size);
 			Assert::AreNotEqual(reinterpret_cast<int>(buf), 0);
-			const int test_file_size = 339631;
 			Assert::AreEqual(static_cast<int>(size), test_file_size);
 			Assert::AreEqual(*reinterpret_cast<const int *>(buf), static_cast<int>(0xE0FFD8FF));
 			Assert::AreEqual(static_cast<int>(buf[test_file_size - 1]), static_cast<int>(0xD9));
 			buf = fb1.getBuffer(0);
 			Assert::AreEqual(reinterpret_cast<int>(buf), 0);
+			Assert::AreEqual(fb1.Initialize(L"d:\\SHARE\\pic\\Thumbs.db"), E_FAIL);
+			buf = fb1.getBuffer(&size);
+			Assert::AreNotEqual(reinterpret_cast<int>(buf), 0);
+			Assert::AreEqual(static_cast<int>(size), test_file_size);
+			Assert::AreEqual(*reinterpret_cast<const int*>(buf), static_cast<int>(0xE0FFD8FF));
+			Assert::AreEqual(static_cast<int>(buf[test_file_size - 1]), static_cast<int>(0xD9));
+			buf = fb1.getBuffer(0);
+		}
+	};
+
+	TEST_CLASS(ImageStoreUnitTest)
+	{
+	public:
+
+		TEST_METHOD(ImageStoreInit)
+		{
+			ImageStore is1;
+			Assert::AreEqual(is1.Initialize(), S_OK);
 		}
 	};
 }
