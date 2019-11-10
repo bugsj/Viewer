@@ -36,6 +36,9 @@
     <ClInclude Include="ImageStore.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AsyncReturn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Viewer.cpp">
@@ -51,6 +54,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ImageStore.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AsyncReturn.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,7 +4,7 @@
 #include <PathCch.h>
 
 #include "ImageStore.h"
-#include "BaseWindow.h"
+#include "AsyncReturn.h"
 
 
 ImageStore::ImageStore() : m_file_index(0)
@@ -63,7 +63,7 @@ int ImageStore::FetchFiles(const WCHAR* path)
 	return static_cast<int>(m_files.size());
 }
 
-void ImageStore::CmdOpenFile(BaseWindow* view, const WCHAR* filename)
+void ImageStore::CmdOpenFile(AsyncReturn* view, const WCHAR* filename)
 {
 	size_t strsize = wcslen(filename) + 1;
 	std::unique_ptr<WCHAR[]> path = std::make_unique<WCHAR[]>(strsize);
@@ -77,28 +77,30 @@ void ImageStore::CmdOpenFile(BaseWindow* view, const WCHAR* filename)
 	{
 		HANDLE hfile = CreateFile(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 		if (hfile == INVALID_HANDLE_VALUE) {
-			view->NotifyAsyncReturn(-1);
+			view->sendAsyncReturn(-1, 0);
 		}
 		LARGE_INTEGER filesize;
 		if (!GetFileSizeEx(hfile, &filesize)) {
-			view->NotifyAsyncReturn(-1);
+			view->sendAsyncReturn(-1, 0);
 		}
-		std::unique_ptr<BYTE[]> buf = std::make_unique<BYTE[]>(filesize.QuadPart);
+
+		Assert(filesize.HighPart == 0);
+		std::unique_ptr<BYTE[]> buf = std::make_unique<BYTE[]>(filesize.LowPart);
 		DWORD rsize;
-		if (!ReadFile(hfile, buf.get(), filesize.QuadPart, &rsize, NULL)) {
-			view->NotifyAsyncReturn(-1);
+		if (!ReadFile(hfile, buf.get(), filesize.LowPart, &rsize, NULL)) {
+			view->sendAsyncReturn(-1, 0);
 		}
 		m_current_buf = std::move(buf);
 		CloseHandle(hfile);
 	}
 }
 
-void ImageStore::CmdNextFile(BaseWindow* view)
+void ImageStore::CmdNextFile(AsyncReturn* view)
 {
 
 }
 
-void ImageStore::CmdPrevFile(BaseWindow* view)
+void ImageStore::CmdPrevFile(AsyncReturn* view)
 {
 
 }

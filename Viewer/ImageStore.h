@@ -2,7 +2,7 @@
 #include <vector>
 #include <memory>
 
-class BaseWindow;
+class AsyncReturn;
 
 class ImageStore
 {
@@ -15,9 +15,9 @@ public:
 private:
 	PCWSTR ClassName() const { return L"ImageStore"; }
 
-	void CmdOpenFile(BaseWindow *view, const WCHAR* file);
-	void CmdNextFile(BaseWindow* view);
-	void CmdPrevFile(BaseWindow* view);
+	void CmdOpenFile(AsyncReturn*view, const WCHAR* file);
+	void CmdNextFile(AsyncReturn* view);
+	void CmdPrevFile(AsyncReturn* view);
 
 	int FetchFiles(const WCHAR* path);
 	int AppendFiles(const WCHAR* path, const WCHAR* filetype);

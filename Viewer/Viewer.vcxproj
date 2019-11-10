@@ -153,6 +153,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AsyncReturn.h" />
     <ClInclude Include="BaseWindow.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="ImageStore.h" />
@@ -162,6 +163,7 @@
     <ClInclude Include="ViewWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AsyncReturn.cpp" />
     <ClCompile Include="BaseWindow.cpp" />
     <ClCompile Include="ImageStore.cpp" />
     <ClCompile Include="Viewer.cpp" />

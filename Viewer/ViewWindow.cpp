@@ -81,9 +81,11 @@ HRESULT ViewWindow::CreateD2DBitmapFromFile(LPCWSTR szFileName)
 		if (!GetFileSizeEx(file, &filesize)) {
 			return E_FAIL;
 		}
-		std::unique_ptr<BYTE[]> buf(new BYTE[filesize.QuadPart]);
+
+		Assert(filesize.HighPart == 0);
+		std::unique_ptr<BYTE[]> buf(new BYTE[filesize.LowPart]);
 		DWORD rsize;
-		if (!ReadFile(file, buf.get(), filesize.QuadPart, &rsize, NULL)) {
+		if (!ReadFile(file, buf.get(), filesize.LowPart, &rsize, NULL)) {
 			return E_FAIL;
 		}
 		CloseHandle(file);

@@ -5,7 +5,6 @@ public:
 	BaseWindow() : m_hWnd(NULL), m_hAccel(NULL) { }
 
 	HWND window() const { return m_hWnd; }
-	virtual int NotifyAsyncReturn(int message) = 0;
 
 	BOOL Create(
 		PCWSTR lpWindowName,
