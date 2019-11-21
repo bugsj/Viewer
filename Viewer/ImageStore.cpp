@@ -35,17 +35,17 @@ int ImageStore::AppendFiles(const WCHAR* path, const WCHAR* filetype)
 		return 0;
 	}
 	size_t filenamelen = wcslen(nextinfo.cFileName);
-	m_files.emplace_back(std::make_unique<WCHAR[]>(lenpath + filenamelen + 2));
-	CopyMemory(m_files.back().get(), path, sizeof(WCHAR) * lenpath);
+	m_files.emplace_back(std::vector<WCHAR>(lenpath + filenamelen + 2));
+	CopyMemory(m_files.back().data(), path, sizeof(WCHAR) * lenpath);
 	m_files.back()[lenpath] = L'\\';
-	CopyMemory(m_files.back().get() + lenpath + 1, nextinfo.cFileName, sizeof(WCHAR) * (filenamelen + 1));
+	CopyMemory(m_files.back().data() + lenpath + 1, nextinfo.cFileName, sizeof(WCHAR) * (filenamelen + 1));
 
 	while (FindNextFile(file, &nextinfo)) {
 		filenamelen = wcslen(nextinfo.cFileName);
-		m_files.emplace_back(std::make_unique<WCHAR[]>(lenpath + filenamelen + 2));
-		CopyMemory(m_files.back().get(), path, sizeof(WCHAR) * lenpath);
+		m_files.emplace_back(std::vector<WCHAR>(lenpath + filenamelen + 2));
+		CopyMemory(m_files.back().data(), path, sizeof(WCHAR) * lenpath);
 		m_files.back()[lenpath] = L'\\';
-		CopyMemory(m_files.back().get() + lenpath + 1, nextinfo.cFileName, sizeof(WCHAR) * (filenamelen + 1));
+		CopyMemory(m_files.back().data() + lenpath + 1, nextinfo.cFileName, sizeof(WCHAR) * (filenamelen + 1));
 	}
 
 	return static_cast<int>(m_files.size());
@@ -56,8 +56,8 @@ int ImageStore::FetchFiles(const WCHAR* path)
 	AppendFiles(path, L"*.jpg");
 	AppendFiles(path, L"*.png");
 
-	std::sort(m_files.begin(), m_files.end(), [](const std::unique_ptr<WCHAR[]>& l, const std::unique_ptr<WCHAR[]>& r) {
-		return wcscmp(l.get(), r.get()) < 0;
+	std::sort(m_files.begin(), m_files.end(), [](const std::vector<WCHAR>& l, const std::vector<WCHAR>& r) {
+		return wcscmp(l.data(), r.data()) < 0;
 	});
 
 	return static_cast<int>(m_files.size());
@@ -69,8 +69,8 @@ int ImageStore::PointFile(const WCHAR* file)
 		m_current_file = 0;
 		return 0;
 	}
-	auto cur = std::find_if(m_files.begin(), m_files.end(), [file](std::unique_ptr<WCHAR[]>& p) {
-		return wcscmp(p.get(), file) == 0;
+	auto cur = std::find_if(m_files.begin(), m_files.end(), [file](std::vector<WCHAR>& p) {
+		return wcscmp(p.data(), file) == 0;
 	});
 	m_file_index = (cur - m_files.begin()) % m_files.size();
 	return m_file_index;
@@ -83,9 +83,9 @@ PCWSTR ImageStore::GetNextFilename(int step) const
 	case 0:
 		return nullptr;
 	case 1:
-		return m_files[0].get();
+		return m_files[0].data();
 	default:
-		return m_files[(m_file_index + step) % file_cnt].get();
+		return m_files[(m_file_index + step) % file_cnt].data();
 	}
 }
 PCWSTR ImageStore::GetPrevFilename(int step) const
@@ -95,9 +95,9 @@ PCWSTR ImageStore::GetPrevFilename(int step) const
 	case 0:
 		return nullptr;
 	case 1:
-		return m_files[0].get();
+		return m_files[0].data();
 	default:
-		return m_files[(m_file_index - step) % file_cnt].get();
+		return m_files[(m_file_index - step) % file_cnt].data();
 	}
 }
 

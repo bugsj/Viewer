@@ -21,7 +21,7 @@
 
 #include <memory>
 #include <mutex>
-
+#include <vector>
 
 template <typename T>
 inline void SafeRelease(T*& p)

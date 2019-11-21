@@ -27,7 +27,7 @@ private:
 	PCWSTR GetPrevFilename(int step = 1) const;
 
 private:
-	std::vector< std::unique_ptr<WCHAR[]> > m_files;
+	std::vector< std::vector<WCHAR> > m_files;
 	int m_file_index;
 
 	std::shared_ptr<FileBuffer> m_current_file;

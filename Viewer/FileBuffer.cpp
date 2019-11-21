@@ -8,7 +8,7 @@ HRESULT FileBuffer::Initialize(const WCHAR* filename)
 
 	HRESULT hr = S_OK;
 
-	if (m_bufsize != 0) {
+	if (m_buf.size() != 0) {
 		return E_FAIL;
 	}
 
@@ -22,17 +22,33 @@ HRESULT FileBuffer::Initialize(const WCHAR* filename)
 	}
 	else {
 		Assert(filesize.HighPart == 0);
-		std::unique_ptr<BYTE[]> buf = std::make_unique<BYTE[]>(filesize.LowPart);
+		std::vector<BYTE> buf(filesize.LowPart);
 		DWORD rsize;
-		if (!ReadFile(hfile, buf.get(), filesize.LowPart, &rsize, NULL)) {
+		if (!ReadFile(hfile, buf.data(), filesize.LowPart, &rsize, NULL)) {
 			hr = E_FAIL;
 		}
 		else {
-			m_buf = std::move(buf);
-			m_bufsize = filesize.LowPart;
+			Assert(rsize == filesize.LowPart);
+			m_buf.swap(buf);
 		}
 	}
 	CloseHandle(hfile);
+	return hr;
+}
+
+HRESULT FileBuffer::Initialize(size_t size, BYTE** buf)
+{
+	std::lock_guard<std::mutex> lock(m_mutex);
+
+	HRESULT hr = S_OK;
+
+	if (m_buf.size() != 0 || size == 0) {
+		return E_FAIL;
+	}
+	
+	m_buf.resize(size);
+	*buf = m_buf.data();
+
 	return hr;
 }
 
@@ -42,9 +58,9 @@ const BYTE* FileBuffer::getBuffer(size_t *size)
 		return nullptr;
 	}
 
-	if (m_bufsize != 0) {
-		*size = m_bufsize;
-		return m_buf.get();
+	if (m_buf.size() != 0) {
+		*size = m_buf.size();
+		return m_buf.data();
 	}
 	else {
 		*size = 0;
