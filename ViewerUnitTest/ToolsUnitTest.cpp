@@ -48,30 +48,30 @@ namespace ToolsUnitTest
 			Assert::AreEqual("test", charbuf.data());
 			JViewer::Tools::StringAppend(&charbuf, "test");
 			Assert::AreEqual("testtest", charbuf.data());
-			JViewer::Tools::StringAppend(&charbuf, "1", "2");
+			JViewer::Tools::StringAppend(&charbuf, { "1", "2" });
 			Assert::AreEqual("testtest12", charbuf.data());
-			JViewer::Tools::StringAppend(&charbuf, "1", "2", "3");
+			JViewer::Tools::StringAppend(&charbuf, { "1", "2", "3" });
 			Assert::AreEqual("testtest12123", charbuf.data());
-			JViewer::Tools::StringAppend(&charbuf, "a", "b", "c", "d");
+			JViewer::Tools::StringAppend(&charbuf, { "a", "b", "c", "d" });
 			Assert::AreEqual("testtest12123abcd", charbuf.data());
-			JViewer::Tools::StringAppend(&charbuf, "hello", ", ", "the", " ", "world");
+			JViewer::Tools::StringAppend(&charbuf, { "hello", ", ", "the", " ", "world" });
 			Assert::AreEqual("testtest12123abcdhello, the world", charbuf.data());
-			JViewer::Tools::StringAppend(&charbuf, "!!!", "hello", ", ", "the", " ", "world");
+			JViewer::Tools::StringAppend(&charbuf, { "!!!", "hello", ", ", "the", " ", "world" });
 			Assert::AreEqual("testtest12123abcdhello, the world!!!hello, the world", charbuf.data());
 
 			JViewer::Tools::StringAppend(&wcharbuf, L"test");
 			Assert::AreEqual(L"test", wcharbuf.data());
 			JViewer::Tools::StringAppend(&wcharbuf, L"test");
 			Assert::AreEqual(L"testtest", wcharbuf.data());
-			JViewer::Tools::StringAppend(&wcharbuf, L"1", L"2");
+			JViewer::Tools::StringAppend(&wcharbuf, { L"1", L"2" });
 			Assert::AreEqual(L"testtest12", wcharbuf.data());
-			JViewer::Tools::StringAppend(&wcharbuf ,L"1", L"2", L"3");
+			JViewer::Tools::StringAppend(&wcharbuf, { L"1", L"2", L"3" });
 			Assert::AreEqual(L"testtest12123", wcharbuf.data());
-			JViewer::Tools::StringAppend(&wcharbuf, L"a", L"b", L"c", L"d");
+			JViewer::Tools::StringAppend(&wcharbuf, { L"a", L"b", L"c", L"d" });
 			Assert::AreEqual(L"testtest12123abcd", wcharbuf.data());
-			JViewer::Tools::StringAppend(&wcharbuf, L"hello", L", ", L"the", L" ", L"world");
+			JViewer::Tools::StringAppend(&wcharbuf, { L"hello", L", ", L"the", L" ", L"world" });
 			Assert::AreEqual(L"testtest12123abcdhello, the world", wcharbuf.data());
-			JViewer::Tools::StringAppend(&wcharbuf, L"!!!", L"hello", L", ", L"the", L" ", L"world");
+			JViewer::Tools::StringAppend(&wcharbuf, { L"!!!", L"hello", L", ", L"the", L" ", L"world" });
 			Assert::AreEqual(L"testtest12123abcdhello, the world!!!hello, the world", wcharbuf.data());
 		}
 
